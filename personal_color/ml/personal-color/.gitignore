@@ -1,0 +1,16 @@
+venv/
+__pycache__/
+*.pyc
+
+# mediapipe 모델 자산(별도 다운로드, 커밋하지 않음)
+*.task
+
+# 데이터셋/산출물은 절대 커밋하지 않는다(얼굴 이미지·가중치)
+data/
+datasets/
+*.csv
+models/
+*.pt
+*.pth
+*.onnx
+*.pkl

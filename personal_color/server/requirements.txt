@@ -1,0 +1,12 @@
+# 기본(=mock) 백엔드 의존성. GPU/torch 불필요.
+# Jetson(aarch64)/x86_64 모두 휠 존재. [standard] 추가물 빌드가 막히면 uvicorn 단독으로.
+fastapi>=0.110
+uvicorn>=0.27
+python-multipart>=0.0.9
+pillow>=10.0
+numpy>=1.24
+
+# /personal-color 엔드포인트용(퍼스널컬러 CNN). torch 없이 onnxruntime 만으로 추론.
+# mediapipe 는 얼굴 크롭(학습 프레이밍 일치)용 — 없으면 중앙 크롭 폴백이라 정확도만 하락.
+onnxruntime>=1.17
+mediapipe>=0.10

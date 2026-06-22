@@ -1,0 +1,44 @@
+# ===== OS / Editor =====
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# ===== Claude Code (local) =====
+.claude/
+
+# ===== Node / Next.js =====
+node_modules/
+.next/
+out/
+build/
+dist/
+.turbo/
+*.tsbuildinfo
+next-env.d.ts
+
+# ===== Python =====
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# ===== Env =====
+.env
+.env*.local
+
+# ===== Large model / asset files (용량·라이선스로 제외) =====
+*.glb
+*.gltf
+*.hdr
+*.onnx
+*.task
+*.pt
+*.pth
+*.pkl
+
+# ===== Data (얼굴 이미지·데이터셋은 절대 커밋 금지) =====
+data/
+datasets/
+*.csv

@@ -1,0 +1,29 @@
+퍼스널컬러 모듈 — Xavier 병합 가이드
+원본 커밋: d089166  (feat: 퍼스널컬러 진단·코디 추천 모듈)
+
+[이 zip 구성]
+  personal_color/<레포경로>   = 수정·신규 파일 전체 사본 (참고/수동머지용)
+  personal_color/MERGE.patch  = d089166 커밋 패치 (코드 자동 병합용)
+  personal_color/MERGE.txt    = 이 파일
+  + 런타임 자산 3개 (.onnx / .json / .task) — gitignore라 패치엔 없음
+
+[병합 3단계 — 레포 루트에서]
+1) 코드 병합 (21개 = 신규 16 + 기존수정 5, 한 번에):
+     git am --3way personal_color/MERGE.patch
+     # 충돌 시: git apply --3way personal_color/MERGE.patch 로 대체
+   * 기존수정 5개(덮어쓰기 아니라 3-way 머지됨):
+       server/server.py            (/personal-color 엔드포인트 + lazy analyzer)
+       server/requirements.txt     (onnxruntime, mediapipe)
+       src/lib/store.ts            (personalColor 상태/액션)
+       src/types/index.ts         (PersonalColor 타입)
+       src/components/ui/AiSynthesisMode.tsx  (<PersonalColorPanel/> 렌더)
+
+2) 런타임 자산 수동 배치 (gitignore라 git으론 안 옴):
+     personal_color/ml/personal-color/models/personal_color_resnet18.onnx
+     personal_color/ml/personal-color/models/personal_color_resnet18.json
+     personal_color/ml/personal-color/face_landmarker.task
+   → 레포의 동일 경로(ml/personal-color/...)에 그대로 복사
+
+3) 의존성 + 확인:
+     pip install onnxruntime mediapipe      # 서버, torch 불필요
+     # 서버 재기동 후 POST /personal-color 에 얼굴 이미지 → 시즌/팔레트 JSON 확인
