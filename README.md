@@ -31,19 +31,6 @@
 
 ---
 
-## 🧑‍💻 나의 담당 — 2D 색상 추천 시스템 (김도윤)
-
-이 저장소의 **`personal_color/`** 모듈은 제가 전담한 부분입니다.
-
-- **색상 추출** — 옷 이미지 → 배경 제거 → **LAB 색공간 KMeans 클러스터링**으로 대표 색 팔레트 추출
-- **추천 엔진** — 추출한 색(HSV Hue) → **색상 조화 이론**(보색·유사색 등)으로 어울리는 다른 카테고리 옷 색 추천
-- **퍼스널 컬러 분류** — 얼굴 사진 → **MediaPipe 얼굴 크롭** → **ResNet18(ONNX) 추론**으로 웜/쿨톤 진단
-- **API & 연동** — **FastAPI** 추천 엔드포인트 + Next.js 프론트 연동 컴포넌트
-
-> 설계 의도와 인터페이스는 [`내일은 패션왕 - 2D 색상추천 시스템 설계서.md`](./내일은%20패션왕%20-%202D%20색상추천%20시스템%20설계서.md)에 정리되어 있습니다.
-
----
-
 ## 🏗️ 시스템 구성
 
 두 개의 모듈로 구성됩니다.
@@ -139,15 +126,15 @@ uvicorn server:app --reload --port 8000
 
 ### 1. 퍼스널컬러 CNN 모델 완성 및 검증
 
-**ResNet18 기반 3축 회귀 모델로 12 타입 자동 분류 달성.** 학습 파이프라인(train.py)은 FairFace 코퍼스에서 224×224 얼굴 이미지를 입력으로 하여 warmcool/value/clarity 3축을 연속값으로 회귀하는 CNN을 구축했다. 검증셋(약 20%)에서 시즌 정확도 90.4%, 타입 정확도 79.5% 달성(규칙 라벨 재현율 기준). 축 평균절대오차는 warmcool=0.1776, value=0.1371, clarity=0.2683으로 측정됨. 이는 의사라벨 품질이 모델의 성능 상한이 된다는 원칙을 따르며, 규칙 설계와 코퍼스 통계 보정의 중요성을 검증했다.
+**ResNet18 기반 3축 회귀 모델로 12 타입 자동 분류 달성.** 학습 파이프라인(train.py)은 FairFace 코퍼스에서 224×224 얼굴 이미지를 입력으로 하여 warmcool/value/clarity 3축을 연속값으로 회귀하는 CNN을 구축. 검증셋(약 20%)에서 시즌 정확도 90.4%, 타입 정확도 79.5% 달성(규칙 라벨 재현율 기준). 축 평균절대오차는 warmcool=0.1776, value=0.1371, clarity=0.2683으로 측정됨. 이는 의사라벨 품질이 모델의 성능 상한이 된다는 원칙을 따르며, 규칙 설계와 코퍼스 통계 보정의 중요성을 검증.
 
 ### 2. 2-pass 부트스트랩 라벨링 및 색공간 정규화
 
-**FairFace 자동 라벨링 파이프라인으로 인구통계 편향 보정.** label_dataset.py는 SegFormer 얼굴 세그멘테이션으로 피부/머리/눈 색을 추출하고, rules.py의 규칙 분류기로 의사라벨을 생성한다. 핵심은 2-pass 구조로, Pass 1에서 다양한 피부색 표본을 확보한 후 Pass 2에서 전체 코퍼스의 피부/머리 색 중앙값으로 규칙의 중립점(B_NEUTRAL, L_NEUTRAL, CONTRAST_NEUTRAL, CHROMA_NEUTRAL)을 재설정한다. CIELab 색공간 변환(D65 백색점)을 전역 사용하여 지각적 거리의 안정성을 보장하며, color_utils.py에서 ITA 도(피부 밝기/언더톤 지표)와 chroma 계산도 제공한다.
+**FairFace 자동 라벨링 파이프라인으로 인구통계 편향 보정.** label_dataset.py는 SegFormer 얼굴 세그멘테이션으로 피부/머리/눈 색을 추출하고, rules.py의 규칙 분류기로 의사라벨을 생성. 핵심은 2-pass 구조로, Pass 1에서 다양한 피부색 표본을 확보한 후 Pass 2에서 전체 코퍼스의 피부/머리 색 중앙값으로 규칙의 중립점(B_NEUTRAL, L_NEUTRAL, CONTRAST_NEUTRAL, CHROMA_NEUTRAL)을 재설정. CIELab 색공간 변환(D65 백색점)을 전역 사용하여 지각적 거리의 안정성을 보장하며, color_utils.py에서 ITA 도(피부 밝기/언더톤 지표)와 chroma 계산도 제공함.
 
 ### 3. ONNX 배포 경량화 및 학습-추론 분포 일치
 
-**torch 불필요한 경량 추론 서버 구현.** export.py는 학습된 .pt 모델을 ONNX로 내보내며 사이드카 JSON에 메타정보(정규화 파라미터, 축 순서, 검증 지표)를 저장한다. personal_color.py는 onnxruntime만으로 ONNX 모델을 추론하며, mediapipe FaceLandmarker로 얼굴을 bbox 1.25배 정사각 크롭하여 학습 분포와 일치시킨다(분포 불일치 방지). 얼굴 미검출 시 중앙 정사각 크롭으로 폴백하고 face_detected 플래그를 사용자에게 반환한다. FastAPI 서버(server.py)는 POST /personal-color 엔드포인트로 multipart 이미지를 받아 분류 결과(type/season/axes/palette/confidence)를 JSON으로 반환한다.
+**torch 불필요한 경량 추론 서버 구현.** export.py는 학습된 .pt 모델을 ONNX로 내보내며 사이드카 JSON에 메타정보(정규화 파라미터, 축 순서, 검증 지표)를 저장. personal_color.py는 onnxruntime만으로 ONNX 모델을 추론하며, mediapipe FaceLandmarker로 얼굴을 bbox 1.25배 정사각 크롭하여 학습 분포와 일치시킴(분포 불일치 방지). 얼굴 미검출 시 중앙 정사각 크롭으로 폴백하고 face_detected 플래그를 사용자에게 반환. FastAPI 서버(server.py)는 POST /personal-color 엔드포인트로 multipart 이미지를 받아 분류 결과(type/season/axes/palette/confidence)를 JSON으로 반환.
 
 ### 4. CIELab 거리 기반 색조화도 계산 및 의류 추천 필터링
 
@@ -155,15 +142,15 @@ uvicorn server:app --reload --port 8000
 
 ### 5. 12 타입 분류 체계 및 4시즌 팔레트 제공
 
-**웜쿨/밝기/선명도 3축 → 4시즌 12타입 → 의류 색상 팔레트 매핑.** taxonomy.py는 3개의 연속축을 4사분면(봄=웜라이트, 여름=쿨라이트, 가을=웜딥, 겨울=쿨딥)으로 먼저 분류하고, STRONG=0.6 임계값으로 각 축의 강도를 판단하여 세부 타입(light/true/bright 또는 soft/true/deep)을 결정한다. 각 12 타입마다 패션 코디용 hex 7색 팔레트를 정의했으며(예: 봄 라이트 #F8D7BE 등), 규칙.py에서 신뢰도=tanh(min(|warmcool|,|value|))로 경계선 케이스 불확실도를 표현한다.
+**웜쿨/밝기/선명도 3축 → 4시즌 12타입 → 의류 색상 팔레트 매핑.** taxonomy.py는 3개의 연속축을 4사분면(봄=웜라이트, 여름=쿨라이트, 가을=웜딥, 겨울=쿨딥)으로 먼저 분류하고, STRONG=0.6 임계값으로 각 축의 강도를 판단하여 세부 타입(light/true/bright 또는 soft/true/deep)을 결정. 각 12 타입마다 패션 코디용 hex 7색 팔레트를 정의했으며(예: 봄 라이트 #F8D7BE 등), 규칙.py에서 신뢰도=tanh(min(|warmcool|,|value|))로 경계선 케이스 불확실도를 표현.
 
 ### 6. 학습 파이프라인 검증 및 회귀 테스트
 
-**selftest.py와 features_selftest.py로 무데이터셋 검증.** selftest.py는 합성 4사분면(웜라이트/쿨라이트/웜딥/쿨딥) 색 입력으로 타입/시즌 파이프라인을 검증하며, GPU나 실제 이미지 코퍼스 없이 수행된다. features_selftest.py는 representative_rgb의 이상치 거부(Lab L* 극단값 drop_frac=0.2 비율 제거) 로직을 검증하며 피부색, 반사광, 그림자 등 다양한 입력에 대한 안정성을 확인한다. export.py는 검증셋에서 시즌 혼동행렬(4×4)을 출력하여 모델이 어느 시즌을 헷갈리는지 시각화하고, 파생 시즌/타입 정확도를 규칙 라벨 재현율로 계산한다.
+**selftest.py와 features_selftest.py로 무데이터셋 검증.** selftest.py는 합성 4사분면(웜라이트/쿨라이트/웜딥/쿨딥) 색 입력으로 타입/시즌 파이프라인을 검증하며, GPU나 실제 이미지 코퍼스 없이 수행됨. features_selftest.py는 representative_rgb의 이상치 거부(Lab L* 극단값 drop_frac=0.2 비율 제거) 로직을 검증하며 피부색, 반사광, 그림자 등 다양한 입력에 대한 안정성을 확인. export.py는 검증셋에서 시즌 혼동행렬(4×4)을 출력하여 모델이 어느 시즌을 헷갈리는지 시각화하고, 파생 시즌/타입 정확도를 규칙 라벨 재현율로 계산.
 
 ### 7. 팀 병렬 개발 인터페이스 및 문서화
 
-**설계서 및 ARCHITECTURE/PIPELINE 문서로 팀원 연동 명시.** 2D 색상추천 시스템 설계서는 MVP 범위, 모듈 분해, API 스펙, 일정, 품질 목표를 코드 작성 이전에 확정하였고, 박찬영(의류 부착), 오필립(체형 3D), 이은석(Vision/AI)과의 연동 지점을 명확히 했다. ARCHITECTURE.md와 PIPELINE.md는 Phase별 진행상황(Phase 0-2C 87.5% 완료), 각 컴포넌트의 책임, 설계 메모(색 증강 제외, 기하 증강만 사용, 학습 프레이밍 일치 등)를 기록했다. 이는 코드 통합 및 검증 과정을 체계화하고 향후 유지보수성을 높인다.
+**설계서 및 ARCHITECTURE/PIPELINE 문서로 팀원 연동 명시.** 2D 색상추천 시스템 설계서는 MVP 범위, 모듈 분해, API 스펙, 일정, 품질 목표를 코드 작성 이전에 확정하였고, 의류 부착/체형 3D/Vision&AI 와의 연동 지점을 명확히함. ARCHITECTURE.md와 PIPELINE.md는 Phase별 진행상황(Phase 0-2C 87.5% 완료), 각 컴포넌트의 책임, 설계 메모(색 증강 제외, 기하 증강만 사용, 학습 프레이밍 일치 등)를 기록. 이는 코드 통합 및 검증 과정을 체계화하고 향후 유지보수성을 높임.
 
 ---
 
