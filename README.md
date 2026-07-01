@@ -89,8 +89,6 @@ pip install -r requirements.txt
 uvicorn server:app --reload --port 8000
 ```
 
-> ⚠️ `.glb` 의류 모델, 퍼스널 컬러 `ResNet18(.onnx)` 가중치, MediaPipe `.task` 등 **대용량 에셋은 용량·라이선스 문제로 저장소에서 제외**되어 있습니다. 모델 디스크립터(`*.json`)와 학습/추론 코드는 포함됩니다.
-
 ---
 
 ## 📂 디렉토리 구조
