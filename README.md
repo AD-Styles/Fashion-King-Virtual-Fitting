@@ -1,5 +1,5 @@
 # 👗 내일은 패션왕 (Fashion King) — 360° 가상 피팅 & AI 색상 추천 팀 프로젝트
-## **컨셉:** 내 체형 → 가상 마네킹 → 옷 입혀보기 → 360° 회전 → 🎨 AI 색상 추천
+**컨셉:** 내 체형 → 가상 마네킹 → 옷 입혀보기 → 360° 회전 → 🎨 AI 색상 추천
 
 ![Next.js](https://img.shields.io/badge/Next.js_14-000000?style=flat&logo=nextdotjs&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat&logo=typescript&logoColor=white)
