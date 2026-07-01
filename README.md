@@ -48,7 +48,7 @@ Next.js 14 + Three.js / React Three Fiber 기반. 체형 슬라이더 → 마네
 [R3F Canvas]  (실시간 60fps 리렌더)
 ```
 
-### 2) `personal_color/` — AI 색상 추천 / 퍼스널 컬러 (담당: 김도윤)
+### 2) `personal_color/` — AI 색상 추천 / 퍼스널 컬러
 
 Python(ML) + FastAPI(서버) + TypeScript(프론트 연동).
 
