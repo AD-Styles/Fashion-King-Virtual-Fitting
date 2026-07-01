@@ -10,7 +10,7 @@
 ![MediaPipe](https://img.shields.io/badge/MediaPipe-0097A7?style=flat&logo=google&logoColor=white)
 
 > **NVIDIA AI ACADEMY 팀 프로젝트 · 팀 포테토(Team Potato)**
-> 가상 마네킹에 옷을 입혀 360°로 돌려보고, AI가 어울리는 색을 추천하는 웹 패션 시뮬레이터.
+> 가상 마네킹에 옷을 입혀 360°로 돌려보고, AI가 어울리는 색을 추천하는 웹 패션 시뮬레이터..
 
 **컨셉:** 내 체형 → 가상 마네킹 → 옷 입혀보기 → 360° 회전 → 🎨 AI 색상 추천
 
